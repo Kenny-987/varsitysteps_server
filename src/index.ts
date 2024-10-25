@@ -32,7 +32,7 @@ const pool = new Pool({
 const app = express();
 const server = http.createServer(app); 
 initializeSocket(server)
-const port = 3000;
+const port = process.env.PORT || 4000;
 connectToDatabase(); 
 
 const PgSessionStore = PgSession(session); 
