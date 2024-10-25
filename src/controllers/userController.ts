@@ -238,7 +238,8 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
         try {
 
             const userId = req.user?.id
-    
+            console.log(req.user);
+            
             //get role
             const userRolesResult = await client.query(`
                 SELECT roles.role_name
