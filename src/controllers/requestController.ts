@@ -1,10 +1,9 @@
 // this controller is for updating requests and notification data for tutors and users
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { client } from '../services/connect';
-// import {io} from '../index'
-import { Console, log } from 'console';
 
-export async function connectionRequest(req: Request, res: Response, next: NextFunction) {
+
+export async function connectionRequest(req: Request, res: Response) {
     if(req.isAuthenticated()){
         const{student_id,tutor_id} = req.body
         console.log(student_id,tutor_id)

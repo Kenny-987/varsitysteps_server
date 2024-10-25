@@ -1,11 +1,15 @@
 import { Client } from 'pg';
 import 'dotenv/config'
 
-const connectionString = process.env.connectionString
+//const connectionString = process.env.connectionString
+const connectionString = process.env.productionConnectionString
 const client = new Client({
     connectionString: connectionString,
+    ssl: {
+      rejectUnauthorized: false, // Disable certificate verification
+    }, 
   }); 
-  
+      
   const connectToDatabase = async () => {
     try {
       await client.connect();

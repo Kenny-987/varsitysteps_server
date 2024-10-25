@@ -19,11 +19,14 @@ import { initializeSocket } from './controllers/messagesController';
 import 'dotenv/config'
 
 const pool = new Pool({
-  user: process.env.user,
-  host: process.env.host,
+  user: process.env.productionUser,
+  host: process.env.productionHost,
   database: process.env.database,
-  password: process.env.password,
-  port: 5432,
+  password: process.env.productionPassword,
+  port: Number(process.env.productionPort),
+  ssl: {
+    rejectUnauthorized: false, // Allows self-signed certificates
+  }
 });
 
 const app = express();
@@ -75,7 +78,7 @@ app.use('/institutes',instituteRoute)
 app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 
-server.listen(port,'10.1.10.89', () => {
+server.listen(port, () => {
     console.log(`Server running at http://10.1.10.28:${port}`);
 });
 
