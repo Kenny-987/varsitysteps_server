@@ -9,7 +9,7 @@ export const initializeSocket = (server:any)=>{
         console.log('socket on')
         io = new Server(server, {
             cors: {
-              origin: 'https://varsitysteps.vercel.app/', 
+              origin: 'https://varsitysteps.vercel.app', 
               methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
               credentials: true,
             },
