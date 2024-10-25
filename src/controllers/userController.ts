@@ -235,9 +235,6 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
     console.log('hit api');
     
     if(req.isAuthenticated()){
-        if(!req.user){
-            return res.status(401).json({error:'unauthorized'})
-        }
         try {
 
             const userId = req.user?.id
