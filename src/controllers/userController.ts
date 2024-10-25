@@ -286,6 +286,7 @@ GROUP BY users.id, students.user_id;`, [userId]);
                       userData = { ...userData, user: tutorResult.rows[0] };
                   }
                 //   console.log(userData);
+                  console.log(userData);
                   
                   res.status(200).json(userData);
         } catch (error) {
