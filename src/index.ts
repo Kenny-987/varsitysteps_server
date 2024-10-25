@@ -44,7 +44,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'http://10.1.10.89:3001',
+  origin: 'https://varsitysteps.vercel.app/',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
@@ -79,7 +79,7 @@ app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 
 server.listen(port, () => {
-    console.log(`Server running at http://10.1.10.28:${port}`);
+    console.log(`Server running at ${port}`);
 });
  
 
