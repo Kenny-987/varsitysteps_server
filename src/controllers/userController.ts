@@ -232,6 +232,8 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
 
 //function to get user specific data
 export async function getUserInfo(req: Request, res: Response, next: NextFunction){
+    console.log('hit api');
+    
     if(req.isAuthenticated()){
         if(!req.user){
             return res.status(401).json({error:'unauthorized'})
