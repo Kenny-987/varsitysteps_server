@@ -81,6 +81,6 @@ app.use('/posts',postsRoute)
 server.listen(port, () => {
     console.log(`Server running at http://10.1.10.28:${port}`);
 });
-
+ 
 
   
