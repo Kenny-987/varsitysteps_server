@@ -44,7 +44,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'https://varsitysteps.vercel.app',
+  origin: '*',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
