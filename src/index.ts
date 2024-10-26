@@ -59,6 +59,7 @@ app.use(
       store:sessionStore,
       unset:'destroy',
       cookie: {
+        domain: 'varsitysteps.vercel.app',
         path: '/', 
         secure: true, 
         maxAge: 90 * 24 * 60 * 60 * 1000,
