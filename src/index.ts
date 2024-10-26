@@ -28,23 +28,24 @@ const pool = new Pool({
     rejectUnauthorized: false, // Allows self-signed certificates
   }
 });
+console.log(pool);
 
 const app = express();
 const server = http.createServer(app); 
-initializeSocket(server)
-const port = process.env.PORT || 4000;
+initializeSocket(server) 
+const port = process.env.PORT || 3000;
 connectToDatabase(); 
 
 const PgSessionStore = PgSession(session); 
 const sessionStore = new PgSessionStore({
   pool: pool, 
-  tableName: 'session',
+  tableName: 'session', 
 });
 
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'http://10.1.10.89:3001',
+  origin: 'https://varsitysteps.vercel.app',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
@@ -61,7 +62,7 @@ app.use(
         path: '/', 
         secure: false, 
         maxAge: 90 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
+        httpOnly: false,
         sameSite: 'lax'
       }
     })
