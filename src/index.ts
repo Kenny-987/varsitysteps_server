@@ -60,10 +60,10 @@ app.use(
       unset:'destroy',
       cookie: {
         path: '/', 
-        secure: false, 
+        secure: true, 
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: false,
-        sameSite: 'lax'
+        sameSite: 'none'
       }
     })
   );
