@@ -1,11 +1,12 @@
 import express from 'express';
-import { editUser,editImage,deleteProfileImage, editPassword,getStudents, getUserInfo, studentProfile,getMyTutors,creacteCreator } from '../controllers/userController';
+import { editUser,editImage,deleteProfileImage, editPassword,getStudents, getUserInfo, studentProfile,getMyTutors,creacteCreator,createTutor } from '../controllers/userController';
 import {upload} from '../services/awsconfig'
 
 const router = express.Router();
 router.patch('/update/:userId', editUser);
 router.post('/profile-picture',upload.single('profilePicture'),editImage)
 router.post('/creator-account',creacteCreator)
+router.post('/tutor-account',createTutor)
 router.delete('/delete-picture/:userId',deleteProfileImage)
 router.put('/update/password/:userId',editPassword)
 router.get('/mystudents',getStudents)

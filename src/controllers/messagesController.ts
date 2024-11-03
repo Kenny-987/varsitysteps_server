@@ -165,7 +165,7 @@ export async function checkChat(req:Request,res:Response) {
             chatsExist = true
             console.log('chat exists');
         }
-        res.json(chatsExist)
+        res.status(200).json(chatsExist)
         } catch (error) {
             console.error(error)
             res.status(500).json({message:"Internal Server error"})

@@ -53,8 +53,6 @@ export async function getRequets(req: Request, res: Response){
              
            if (requests.rows.length > 0){
                res.status(200).json(requests.rows)
-           }else{
-            res.status(404).json({message:'No requests found'})
            }
             
         } catch (error) {
@@ -105,6 +103,7 @@ export async function checkConnection(req: Request, res: Response) {
 
 
 export async function connectionResponse(req: Request, res: Response) {
+    if(req.isAuthenticated()){
     const {requestId} = req.params
     const {status} = req.body
     try {
@@ -127,7 +126,9 @@ export async function connectionResponse(req: Request, res: Response) {
         console.log(error)
         res.status(500).json({ error });
     }
-
+    }else{
+        return res.status(204).json({msg:"No access please login"})
+    }
 }
 export async function getNotifications(req: Request, res: Response) {
     if(req.isAuthenticated()){
@@ -141,23 +142,19 @@ export async function getNotifications(req: Request, res: Response) {
         } catch (error) {
             
         }
-    }else{
-        return res.status(401).json({msg:"No access please login"})
     }
 }
 
 export async function markAsRead(req: Request, res: Response) {
     if(req.isAuthenticated()){
         try {
-            const{status,id} =req.body
-            const result = await client.query(`UPDATE notifications SET is_read = $1 WHERE notifications.id =$2 RETURNING *`,[status,id])
-            res.status(200).json(result.rows[0])
+            const{status} =req.body
+            const result = await client.query(`UPDATE notifications SET is_read = $1`,[status])
+            res.status(200).json({msg:'updated'})
         } catch (error) {
             console.error(error)
             res.status(500)
         }
         
-    }else{
-        return res.status(401).json({msg:"No access please login"})
     }
 }

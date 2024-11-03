@@ -28,7 +28,6 @@ const pool = new Pool({
     rejectUnauthorized: false, // Allows self-signed certificates
   }
 });
-console.log(pool);
 
 const app = express();
 const server = http.createServer(app); 
@@ -61,10 +60,10 @@ app.use(
       proxy: true,
       cookie: {
         path: '/', 
-        secure: true, 
+        secure: true, //for production
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'none'
+        sameSite: 'none' //for production
       }
     })
   );

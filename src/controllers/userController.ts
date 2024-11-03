@@ -232,14 +232,9 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
 
 //function to get user specific data
 export async function getUserInfo(req: Request, res: Response, next: NextFunction){
-    console.log('hit api');
-    
     if(req.isAuthenticated()){
         try {
-
             const userId = req.user?.id
-            console.log(req.user);
-            
             //get role
             const userRolesResult = await client.query(`
                 SELECT roles.role_name
@@ -250,18 +245,23 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                 const userRoles = userRolesResult.rows.map(row => row.role_name);
                 
                 let userData = {};
-
+                //check if role is both tutor and student
+                if (userRoles.includes('tutor')&&userRoles.includes('student')) {
+                    const tutorResult = await client.query(`
+                        SELECT * FROM tutors
+                        WHERE user_id = $1`, [userId]);
+                      userData = { ...userData, tutoring: tutorResult.rows[0] };
+                  }
                 if (userRoles.includes('student')) {
                     const studentResult = await client.query(`
-                      SELECT users.*, 
-       ARRAY_AGG(roles.role_name) AS role_name, 
-       students.*
-FROM users
-JOIN user_roles ON users.id = user_roles.user_id
-JOIN roles ON user_roles.role_id = roles.id
-LEFT JOIN students ON users.id = students.user_id
-WHERE users.id = $1
-GROUP BY users.id, students.user_id;`, [userId]);
+                    SELECT users.*, 
+                    ARRAY_AGG(roles.role_name) AS role_name, students.*
+                    FROM users
+                    JOIN user_roles ON users.id = user_roles.user_id
+                    JOIN roles ON user_roles.role_id = roles.id
+                    LEFT JOIN students ON users.id = students.user_id
+                    WHERE users.id = $1
+                    GROUP BY users.id, students.user_id;`, [userId]);
             
                       userData = { ...userData, user: studentResult.rows[0] }
                     }
@@ -270,11 +270,10 @@ GROUP BY users.id, students.user_id;`, [userId]);
                       const creativeResult = await client.query(`
                         SELECT * FROM creators
                         WHERE user_id = $1`, [userId]);
-            
                         userData = { ...userData, creative: creativeResult.rows[0] };
                     }
             
-                  if (userRoles.includes('tutor')) {
+                  if (userRoles.includes('tutor')&&!userRoles.includes('student')) {
                     const tutorResult = await client.query(`
                       SELECT users.*, roles.role_name, tutors.*
                       FROM users
@@ -285,12 +284,11 @@ GROUP BY users.id, students.user_id;`, [userId]);
             
                       userData = { ...userData, user: tutorResult.rows[0] };
                   }
-                //   console.log(userData);
-                  console.log(userData);
                   
                   res.status(200).json(userData);
         } catch (error) {
             console.error(error)
+            res.status(500).json({msg:'server error'})
         }
             
     }else{
@@ -386,6 +384,26 @@ export async function creacteCreator(req: Request, res: Response) {
                 INSERT INTO creators(user_id,field, specializations,skills) VALUES ($1,$2,$3,$4)
                 `,[user_id,field,specializations,skills])
                 res.status(200).json({msg:'creative created'})
+        } catch (error) {
+            console.error(error)
+            res.status(500)
+        }
+    }else{
+        return res.status(204).json({msg:"No access please login"})
+    }
+}
+
+//create tutor
+export async function createTutor(req: Request, res: Response) {
+    if(req.isAuthenticated()){
+        const user_id = req.user?.id
+        const {teaches,qualifications} = req.body
+        try {
+            await client.query(`INSERT INTO user_roles (user_id,role_id) VALUES ($1, $2)`,[user_id,2])
+             await client.query(`
+                INSERT INTO tutors(user_id,qualifications,teaches) VALUES ($1,$2,$3)
+                `,[user_id,qualifications,teaches])
+                res.status(200).json({msg:'tutor'})
         } catch (error) {
             console.error(error)
             res.status(500)

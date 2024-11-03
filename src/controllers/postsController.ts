@@ -12,7 +12,7 @@ export async function savePost(req:Request,res:Response) {
     const userId = req.user?.id
   
 
-    try {
+    try  {
       const result = await client.query(`
         INSERT INTO posts(user_id,title,tags,description,tiptap_content,type) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,[userId,title,tags,description,content,type])
         
@@ -150,7 +150,7 @@ export async function deletePost(req:Request,res:Response) {
   }
 }
 
-
+ 
 // function to get all posts
 export async function allPosts(req:Request,res:Response) {
   try {
