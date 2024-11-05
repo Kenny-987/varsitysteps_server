@@ -59,6 +59,7 @@ app.use(
       unset:'destroy',
       proxy: true,
       cookie: {
+        domain: 'varsitysteps.vercel.app',
         path: '/', 
         secure: true, //for production
         maxAge: 90 * 24 * 60 * 60 * 1000,

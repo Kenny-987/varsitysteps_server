@@ -341,10 +341,7 @@ export  async function getMyTutors(req: Request, res: Response) {
         }
       
 
-    }else{
-        return res.status(401).json({msg:"No access please login"})
     }
-      
 }
 
 

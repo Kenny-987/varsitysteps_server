@@ -6,7 +6,6 @@ import { Server } from 'socket.io'
 let io:any;
 export const initializeSocket = (server:any)=>{
     try { 
-        console.log('socket on')
         io = new Server(server, {
             cors: {
               origin: 'https://varsitysteps.vercel.app', 
@@ -15,7 +14,6 @@ export const initializeSocket = (server:any)=>{
             },
           });
           io.on('connection',(socket:any)=>{
-            console.log('user connected', socket.id)
             socket.on('joinRoom', (userId:any) => {
                 socket.join(userId);
               });
