@@ -59,12 +59,11 @@ app.use(
       unset:'destroy',
       proxy: true,
       cookie: {
-        domain: 'varsitysteps.vercel.app',
         path: '/', 
-        secure: true, //for production
+        secure: true,
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'none' //for production
+        sameSite: 'none'
       }
     })
   );
@@ -80,6 +79,15 @@ app.use('/institutes',instituteRoute)
 app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 
+app.get('/test-cookie', (req, res) => {
+  res.cookie('testCookie', 'testValue', {
+    secure: true,
+    sameSite: 'none',
+    httpOnly: true,
+    maxAge: 900000,
+  });
+  res.send('Cookie set');
+});
 server.listen(port, () => {
     console.log(`Server running at ${port}`);
 });
