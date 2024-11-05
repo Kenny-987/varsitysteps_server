@@ -25,7 +25,7 @@ const pool = new Pool({
   password: process.env.productionPassword,
   port: Number(process.env.productionPort),
   ssl: {
-    rejectUnauthorized: false, // Allows self-signed certificates
+    rejectUnauthorized: false,
   }
 });
 
@@ -63,7 +63,8 @@ app.use(
         secure: true,
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'none'
+        sameSite: 'none',
+        domain:'varsitysteps-server.onrender.com'
       }
     })
   );
