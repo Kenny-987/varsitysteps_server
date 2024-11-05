@@ -79,15 +79,6 @@ app.use('/institutes',instituteRoute)
 app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 
-app.get('/test-cookie', (req, res) => {
-  res.cookie('testCookie', 'testValue', {
-    secure: true,
-    sameSite: 'none',
-    httpOnly: true,
-    maxAge: 900000,
-  });
-  res.send('Cookie set');
-});
 server.listen(port, () => {
     console.log(`Server running at ${port}`);
 });
