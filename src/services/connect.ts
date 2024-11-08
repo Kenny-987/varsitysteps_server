@@ -6,7 +6,7 @@ const connectionString = process.env.productionConnectionString
 const client = new Client({
     connectionString: connectionString,
     ssl: {
-      rejectUnauthorized: false, 
+      rejectUnauthorized: false,  
     }, 
   }); 
       
