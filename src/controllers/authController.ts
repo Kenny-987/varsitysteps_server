@@ -2,10 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import { client } from '../services/connect';
 import passport from 'passport';
+import { sendMail } from '../services/mail';
 
 export async function registerUser(req: Request, res: Response, next: NextFunction) {
     const { username, email, password,role } = req.body;
-    console.log('sign up api hit', role)
     try {
         const existingUser =  await client.query('SELECT * FROM users WHERE email = $1',[email]);
         if (existingUser.rows.length > 0) {
@@ -49,7 +49,7 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
 }
  
 export function loginUser(req:Request,res:Response,next:NextFunction){
-    passport.authenticate('local',(err:any,user:any,info:any)=>{
+    passport.authenticate('local',(err:any,user:any,info:any)=>{ // using passport for local authentication
         if (err) {
              return next(err);
            }
@@ -64,6 +64,7 @@ export function loginUser(req:Request,res:Response,next:NextFunction){
        if(!user){
         return res.status(401).json({isAuthenticated: false, message: info?.message || 'Login failed' });
        }
+       //query to get user role to be sent to front-end
        const userrole = await client.query(`
         SELECT roles.role_name
         FROM users
@@ -93,4 +94,89 @@ export function logoutUser(req: Request, res: Response, next: NextFunction) {
             return res.json({ message: 'Logged out successfully' });
         });
     });
+}
+
+export async function verifyEmailLink(req:Request,res:Response){
+  
+        try {
+            
+            const {email} = req.body
+            console.log(email);
+            const user_id = req.user?.id
+            const subject = 'Email verification link'
+            const sender = 'varsitysteps@gmail.com'
+            const link = `http://localhost:3000/auth/verify/${user_id}`
+            const message = `Click the following link to verify your email for your VarsitySteps account: ${link} `
+            sendMail(email,subject,sender,message,res)
+        } catch (error) {
+            console.error()
+            res.status(500).json({message:'internal server error'})
+        }
+    
+}
+
+let otpEmail = ''
+// let otpCode =''
+export async function resetPassword(req:Request,res:Response){
+    try {
+        const {email} = req.body
+        otpEmail = email
+        const emailExists = await client.query(`
+            SELECT * FROM users WHERE email = $1
+            `,[email])
+            
+        if(emailExists.rowCount===0){
+            res.status(404).json({message:'oops! No such Email in the system'})
+        }else if(emailExists.rowCount!=0){
+            function generateCode() {
+                let code: Number[] = []
+                for (let i = 0; i < 5; i++) {
+                    code[i] =Math.floor(Math.random() * (10)) + 1 ;
+                }
+                return code.join('')
+                 
+            }
+            const otpCode = generateCode()
+            await client.query('UPDATE users SET otp = $1 WHERE email = $2',[otpCode,email])
+            const subject = 'Password reset request for VarsitySteps account'
+            const message = `We have received a request to reset your VarsitySteps password.\n
+            Use this code: ${otpCode} to proceed to the next step and reset your password.\n
+            If you did not request this, you can ignore this email.
+            `
+            const sender = 'varsitysteps@gmail.com'
+            sendMail(email,subject,sender,message,res)
+           console.log(otpCode);
+           
+           
+        }
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({message:'internal server error'})
+    }
+}
+export async function otp(req:Request,res:Response) {
+    try {
+        const {otp}=req.body
+        const dbOtp = await client.query('SELECT otp FROM users WHERE email = $1',[otpEmail])
+        
+        if(Number(otp) === dbOtp.rows[0].otp){
+            res.status(200).json({message:'otp correct'})
+        }else{
+            res.status(401).json({message:'incorrect otp code'})
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({message:'Internal server error'})
+    }
+}
+export async function newPassword (req:Request,res:Response){
+    try {
+        const {password}= req.body
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await client.query(`UPDATE users SET password = $1 WHERE email = $2`,[hashedPassword,otpEmail])
+        res.status(200).json({message:'everything okay'})
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({message:'Internal server error'})
+    }
 }

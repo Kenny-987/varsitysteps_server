@@ -8,21 +8,16 @@ import {client} from '../services/connect';
 passport.use('local',new LocalStrategy({usernameField:'email',passReqToCallback:true},
     async(req,email,password,done)=>{
        console.log('2- hit verify callback')
-       console.log('Email:', email);
-    console.log('Password:', password);
     try {
         const res = await client.query(`SELECT * FROM users WHERE email = $1`, [email]);
-          
              const user = res.rows[0];
 
         if (!user) {
-            console.log('incorrect email')
             return done(null, false, { message: 'Incorrect email.' });
         }
 
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
-            console.log('incorrect code')
             return done(null, false, { message: 'Incorrect password.' });
         }
 

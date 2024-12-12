@@ -8,7 +8,7 @@ const client = new Client({
     ssl: {
       rejectUnauthorized: false,  
     }, 
-  }); 
+  });  
       
   const connectToDatabase = async () => {
     try {

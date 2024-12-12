@@ -32,7 +32,7 @@ export async function getTutorsBySubject(req: Request, res: Response) {
     try {
         const result = await client.query(`
             SELECT id,email,username,phone,location,profile_image,bio,tutors.*
-                       FROM users 
+            FROM users 
                        LEFT JOIN tutors  
                        ON users.id = tutors.user_id
             WHERE EXISTS (

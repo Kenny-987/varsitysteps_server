@@ -107,7 +107,6 @@ export async function connectionResponse(req: Request, res: Response) {
     const {requestId} = req.params
     const {status} = req.body
     try {
-        console.log(requestId)
         const response =await client.query(`UPDATE connections SET status = $1 WHERE connections.connection_id = $2 RETURNING *`,[status,requestId])
 
         if(response){

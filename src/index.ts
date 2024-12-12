@@ -8,6 +8,7 @@ import requestRoute from './routes/requestRoutes'
 import instituteRoute from './routes/instituteRoutes'
 import messagesRoute from './routes/messagesRoute'
 import postsRoute from './routes/postsRoute'
+import careersRoute from './routes/careersRoute'
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
@@ -17,7 +18,9 @@ import http from 'http';
 import './middleware/passport'; 
 import { initializeSocket } from './controllers/messagesController';
 import 'dotenv/config'
+import {job} from './services/cron'
 
+//job.start()
 const pool = new Pool({
   user: process.env.productionUser,
   host: process.env.productionHost,
@@ -44,7 +47,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'https://varsitysteps.vercel.app',
+  origin: ['http://localhost:3001','http://localhost:5173'],
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
@@ -60,10 +63,10 @@ app.use(
       proxy: true,
       cookie: {
         path: '/', 
-        secure: true,
+        secure: false,
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'none'
+        sameSite: 'lax'
       }
     })
   );
@@ -78,6 +81,7 @@ app.use('/api',requestRoute)
 app.use('/institutes',instituteRoute)
 app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
+app.use('/careers',careersRoute)
 
 server.listen(port, () => {
     console.log(`Server running at ${port}`);
