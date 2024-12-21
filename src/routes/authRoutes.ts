@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, logoutUser,resetPassword,otp,newPassword,verifyEmailLink} from '../controllers/authController';
+import { registerUser, loginUser, logoutUser,resetPassword,otp,newPassword,verifyEmail} from '../controllers/authController';
 
 const router = express.Router();
 
@@ -9,6 +9,6 @@ router.post('/logout', logoutUser);
 router.post('/reset',resetPassword)
 router.post('/otp',otp)
 router.post('/newpassword',newPassword)
-router.post('/verify',verifyEmailLink)
+router.post('/verify',verifyEmail)
 
 export default router;

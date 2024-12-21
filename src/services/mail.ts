@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import { Request, Response } from 'express';
 
-function sendMail(email:any,subject:any,sender:any,message:any,res:Response){
+function sendMail(email:any,subject:any,message:any,res:Response){
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -14,7 +14,7 @@ function sendMail(email:any,subject:any,sender:any,message:any,res:Response){
       },
     });
     const mailOptions = {
-      from: sender,
+      from: "varsitysteps@gmail.com",
       to: email, 
       subject: subject,
       text: `${message}`,

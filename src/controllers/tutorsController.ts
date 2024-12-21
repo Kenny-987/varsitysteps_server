@@ -5,7 +5,7 @@ import { client } from '../services/connect';
 //function to get all tutors
 export async function getTutors(req: Request, res: Response) {
     try {
-        const result = await client.query(`SELECT users.id,email,username,phone,location,bio,profile_image,tutors.*,
+        const result = await client.query(`SELECT users.id,email,username,phone,location,bio,profile_image,is_premium,tutors.*,
             COALESCE(AVG(tutor_rating.rating), 0) AS average_rating,
             COUNT(tutor_rating.rating) AS total_ratings
             FROM users 
@@ -13,7 +13,7 @@ export async function getTutors(req: Request, res: Response) {
             JOIN roles ON user_roles.role_id = roles.id
             LEFT JOIN tutors ON users.id = tutors.user_id
             LEFT JOIN tutor_rating ON tutors.user_id = tutor_rating.tutor_id
-            WHERE roles.role_name = 'tutor'
+            WHERE roles.role_name = 'tutor' AND is_premium = 'true'
             GROUP BY users.id, tutors.user_id`)
         const tutors =  result.rows
         if(tutors.length == 0){
@@ -31,15 +31,19 @@ export async function getTutorsBySubject(req: Request, res: Response) {
     const {query} = req.query
     try {
         const result = await client.query(`
-            SELECT id,email,username,phone,location,profile_image,bio,tutors.*
+            SELECT id,email,username,phone,location,profile_image,bio,is_premium,tutors.*,
+            COALESCE(AVG(tutor_rating.rating), 0) AS average_rating,
+            COUNT(tutor_rating.rating) AS total_ratings
             FROM users 
-                       LEFT JOIN tutors  
-                       ON users.id = tutors.user_id
+            LEFT JOIN tutors ON users.id = tutors.user_id
+            LEFT JOIN tutor_rating ON tutors.user_id = tutor_rating.tutor_id
             WHERE EXISTS (
-            SELECT 1
-            FROM unnest(teaches) AS subject
-            WHERE subject ILIKE $1
-            )
+                SELECT 1
+                FROM unnest(teaches) AS subject
+                WHERE subject ILIKE $1
+                )
+            GROUP BY users.id, tutors.user_id
+            ORDER BY is_premium DESC, average_rating DESC
             `,[`%${query}%`])
 
             res.status(200).json(result.rows)
@@ -53,7 +57,7 @@ export async function tutorProfile(req: Request, res: Response, next: NextFuncti
     const tutorId = req.params.id
     try {
         const result = await client.query(`SELECT 
-        users.id, users.email, users.username, users.phone, users.location, users.profile_image, users.bio, tutors.*,
+        users.id, users.email, users.username, users.phone, users.location, users.profile_image, users.bio,is_premium,tutors.*,
         (SELECT COUNT(*) FROM connections WHERE tutor_id = $1) AS student_count,
         (SELECT COUNT(*) FROM tutor_rating WHERE tutor_id = $1) AS total_ratings,
         (SELECT AVG(rating) FROM tutor_rating WHERE tutor_id = $1) AS average_rating

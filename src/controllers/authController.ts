@@ -96,18 +96,21 @@ export function logoutUser(req: Request, res: Response, next: NextFunction) {
     });
 }
 
-export async function verifyEmailLink(req:Request,res:Response){
-  
+export async function verifyEmail(req:Request,res:Response){
         try {
-            
             const {email} = req.body
-            console.log(email);
-            const user_id = req.user?.id
+            function generateCode() {
+                let code: Number[] = []
+                for (let i = 0; i < 5; i++) {
+                    code[i] =Math.floor(Math.random() * (10)) + 1 ;
+                }
+                return code.join('')
+                 
+            }
+            const otp = generateCode()
             const subject = 'Email verification link'
-            const sender = 'varsitysteps@gmail.com'
-            const link = `http://localhost:3000/auth/verify/${user_id}`
-            const message = `Click the following link to verify your email for your VarsitySteps account: ${link} `
-            sendMail(email,subject,sender,message,res)
+            const message = `Your verification code is: ${otp} `
+            sendMail(email,subject,message,res)
         } catch (error) {
             console.error()
             res.status(500).json({message:'internal server error'})
@@ -143,11 +146,8 @@ export async function resetPassword(req:Request,res:Response){
             Use this code: ${otpCode} to proceed to the next step and reset your password.\n
             If you did not request this, you can ignore this email.
             `
-            const sender = 'varsitysteps@gmail.com'
-            sendMail(email,subject,sender,message,res)
-           console.log(otpCode);
-           
-           
+
+            sendMail(email,subject,message,res)
         }
     } catch (error) {
         console.error(error)
