@@ -18,7 +18,7 @@ import http from 'http';
 import './middleware/passport'; 
 import { initializeSocket } from './controllers/messagesController';
 import 'dotenv/config'
-import {job} from './services/cron'
+// import {job} from './services/cron'
 
 //job.start()
 const pool = new Pool({
@@ -47,7 +47,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: ['http://localhost:3001','http://localhost:5173'],
+  origin: 'https://varsitysteps.vercel.app',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
