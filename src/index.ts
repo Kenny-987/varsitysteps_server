@@ -63,10 +63,10 @@ app.use(
       proxy: true,
       cookie: {
         path: '/', 
-        secure: false,
+        secure: true,
         maxAge: 90 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: 'none'
       }
     })
   );
