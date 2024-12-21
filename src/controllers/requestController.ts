@@ -1,6 +1,7 @@
 // this controller is for updating requests and notification data for tutors and users
 import { Request, Response } from 'express';
 import { client } from '../services/connect';
+import { sendMail } from '../services/mail';
 
 
 export async function connectionRequest(req: Request, res: Response) {
@@ -21,13 +22,24 @@ export async function connectionRequest(req: Request, res: Response) {
                 LEFT JOIN students ON students.user_id = users.id
                 WHERE users.id = $1`,[student_id])
             
+                if (studentDetails.rows.length === 0) {
+                    return res.status(404).json({ message: 'Student not found' });
+                }
+
             await client.query(`
                 INSERT INTO connections (student_id,tutor_id) VALUES ($1, $2)
                 `,[student_id,tutor_id])
+            
+            ///// funtionality to send email notifications on request
+            //get tutor email
+            const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[tutor_id])
+            const subject = `New VarsitySteps connection request.`
+            const message = `You have recieved a new connection request from ${studentDetails.rows[0].username}. /n Visit your dashboard to accept the student: http://localhost:3001/dashboard`
 
-            if (studentDetails.rows.length === 0) {
-                return res.status(404).json({ message: 'Student not found' });
+            if(email.rows.length>0){
+                sendMail(email.rows[0],subject,message,res)
             }
+          
             
             res.status(200).json({message:'requets sent'})
         } catch (error) {
@@ -112,15 +124,20 @@ export async function connectionResponse(req: Request, res: Response) {
         if(response){
             //GET TUTOR NAME
             const responder_id = req.user?.id
-            const responder = await client.query(`SELECT username,id FROM users WHERE id = $1`,[responder_id])
+            const responder = await client.query(`SELECT username,id FROM users WHERE id = $1`,[req.user?.id])
 
             const user_id = response.rows[0].student_id
             const message = `${responder.rows[0].username} accepted your connection request`
             const type = 'response'
             const extra_info = JSON.stringify({responder_id})
             await client.query(`INSERT INTO notifications(user_id,message,type,extra_info) VALUES ($1,$2,$3,$4)`,[user_id,message,type,extra_info])  
+
+            const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[user_id])
+            const subject = `A tutor has accepted your connection request on VarsitySteps`
+            const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: http://localhost:3001/dashboard`
+
+            sendMail(email,subject,emailmessage,res)
         }
-        res.status(200).json({ message: 'Request updated' });
     } catch (error) {
         console.log(error)
         res.status(500).json({ error });
