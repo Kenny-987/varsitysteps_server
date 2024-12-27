@@ -205,30 +205,6 @@ export async function editPassword(req: Request, res: Response, next: NextFuncti
     }
 }
 
-//function to delete user account
-export async function deleteAccount(req: Request, res: Response, next: NextFunction) {
-   if(req.isAuthenticated()){
-    const userId = req.user?.id
-    const {password} = req.body 
-    const result = await client.query(`SELECT * FROM users WHERE id = $1`, [userId]);
-    const user = result.rows[0];
-    if (!user) {
-        console.log('no user found')
-        return res.status(404).json({msg:'No such user'})
-    }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-        console.log('incorrect code')
-        return res.status(401).json({message:"incorrect password"});
-    }else{
-        await client.query(`DELETE FROM users WHERE id = $1`,[userId])
-        return res.status(200).json({message:"Account Deleted"});
-    }
-   
-   }else{
-    return res.status(401).json({msg:"No access please login"})
-   } 
-}
 
 //function to get user specific data
 export async function getUserInfo(req: Request, res: Response, next: NextFunction){

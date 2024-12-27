@@ -33,11 +33,13 @@ export async function connectionRequest(req: Request, res: Response) {
             ///// funtionality to send email notifications on request
             //get tutor email
             const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[tutor_id])
+            console.log(email);
+            
             const subject = `New VarsitySteps connection request.`
-            const message = `You have recieved a new connection request from ${studentDetails.rows[0].username}. /n Visit your dashboard to accept the student: http://localhost:3001/dashboard`
+            const message = `You have recieved a new connection request from ${studentDetails.rows[0].username}. \n Visit your dashboard to accept the student: https:varsitysteps.vercel.app/dashboard`
 
             if(email.rows.length>0){
-                sendMail(email.rows[0],subject,message,res)
+              return  sendMail(email.rows[0].email,subject,message,res)
             }
           
             
@@ -134,9 +136,9 @@ export async function connectionResponse(req: Request, res: Response) {
 
             const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[user_id])
             const subject = `A tutor has accepted your connection request on VarsitySteps`
-            const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: http://localhost:3001/dashboard`
+            const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: https://varsitysteps.vercel.app/dashboard`
 
-            sendMail(email,subject,emailmessage,res)
+            sendMail(email.rows[0].email,subject,emailmessage,res)
         }
     } catch (error) {
         console.log(error)

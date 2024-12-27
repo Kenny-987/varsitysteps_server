@@ -180,3 +180,49 @@ export async function newPassword (req:Request,res:Response){
         res.status(500).json({message:'Internal server error'})
     }
 }
+
+//function to delete user account
+export async function deleteAccount(req: Request, res: Response,next:NextFunction) {
+    console.log('hit first delete endpoint');
+    
+    if(req.isAuthenticated()){
+        console.log('hit delete endpoint');
+        
+     const userId = req.user?.id
+     const {password} = req.body 
+     console.log(password);
+     
+     const result = await client.query(`SELECT * FROM users WHERE id = $1`, [userId]);
+     const user = result.rows[0];
+     if (!user) {
+         console.log('no user found')
+         return res.status(404).json({msg:'No such user'})
+     }
+     const match = await bcrypt.compare(password, user.password);
+     if (!match) {
+         console.log('incorrect code')
+         return res.status(401).json({message:"Incorrect password"});
+     }else{
+       const logout = async()=>{
+        req.logout((err) => {
+            if (err) { return next(err); }
+    
+            // Destroy the session
+            req.session.destroy((err) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Failed to destroy session' });
+                }
+    
+                // Clear the cookie
+                res.clearCookie('connect.sid', { path: '/' });
+                
+            });
+        });
+       } 
+        await logout()
+         await client.query(`DELETE FROM users WHERE id = $1`,[userId])
+         return res.status(200).json({message:"Account Deleted"});
+     }
+    
+    }
+ }
