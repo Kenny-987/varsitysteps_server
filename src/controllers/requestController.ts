@@ -137,8 +137,10 @@ export async function connectionResponse(req: Request, res: Response) {
             const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[user_id])
             const subject = `A tutor has accepted your connection request on VarsitySteps`
             const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: https://varsitysteps.vercel.app/dashboard`
-
-            sendMail(email.rows[0].email,subject,emailmessage,res)
+            if(email.rows.length>0){
+                return  sendMail(email.rows[0].email,subject,message,res)
+              }
+              res.status(200).json({message:'requets sent'})
         }
     } catch (error) {
         console.log(error)

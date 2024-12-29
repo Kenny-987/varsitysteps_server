@@ -58,7 +58,7 @@ export async function tutorProfile(req: Request, res: Response, next: NextFuncti
     try {
         const result = await client.query(`SELECT 
         users.id, users.email, users.username, users.phone, users.location, users.profile_image, users.bio,is_premium,tutors.*,
-        (SELECT COUNT(*) FROM connections WHERE tutor_id = $1) AS student_count,
+        (SELECT COUNT(*) FROM connections WHERE tutor_id = $1 AND status = 'connected') AS student_count,
         (SELECT COUNT(*) FROM tutor_rating WHERE tutor_id = $1) AS total_ratings,
         (SELECT AVG(rating) FROM tutor_rating WHERE tutor_id = $1) AS average_rating
     FROM users 

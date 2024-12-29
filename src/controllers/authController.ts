@@ -108,7 +108,9 @@ export async function verifyEmail(req:Request,res:Response){
                  
             }
             const otp = generateCode()
-            const subject = 'Email verification link'
+            await client.query('UPDATE users SET otp = $1 WHERE email = $2',[otp,email])
+
+            const subject = 'VaristySteps Email verification code'
             const message = `Your verification code is: ${otp} `
             sendMail(email,subject,message,res)
         } catch (error) {
@@ -118,8 +120,9 @@ export async function verifyEmail(req:Request,res:Response){
     
 }
 
+
+
 let otpEmail = ''
-// let otpCode =''
 export async function resetPassword(req:Request,res:Response){
     try {
         const {email} = req.body
@@ -154,16 +157,31 @@ export async function resetPassword(req:Request,res:Response){
         res.status(500).json({message:'internal server error'})
     }
 }
+
 export async function otp(req:Request,res:Response) {
     try {
-        const {otp}=req.body
-        const dbOtp = await client.query('SELECT otp FROM users WHERE email = $1',[otpEmail])
+        const {otp,flag,email}=req.body
         
-        if(Number(otp) === dbOtp.rows[0].otp){
-            res.status(200).json({message:'otp correct'})
-        }else{
-            res.status(401).json({message:'incorrect otp code'})
+        
+        if(flag === 'emailVerification'){
+            const dbOtp = await client.query('SELECT otp FROM users WHERE email = $1',[email])
+            console.log(otp);
+            
+            if(Number(otp) === dbOtp.rows[0].otp){
+                await client.query(`UPDATE users SET is_verified = true WHERE email = $1`,[email])
+                res.status(200).json({message:'verification successful'})
+            }else{
+                res.status(401).json({message:'incorrect otp code'})
+            }
+        }else if(flag==='resetPassword'){
+            const dbOtp = await client.query('SELECT otp FROM users WHERE email = $1',[otpEmail])
+            if(Number(otp) === dbOtp.rows[0].otp){
+                res.status(200).json({message:'otp correct'})
+            }else{
+                res.status(401).json({message:'incorrect otp code'})
+            }
         }
+        
     } catch (error) {
         console.log(error)
         res.status(500).json({message:'Internal server error'})
