@@ -83,9 +83,8 @@ app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 app.use('/careers',careersRoute)
 
-server.listen(port, () => {
-    console.log(`Server running at ${port}`);
+server.listen(3000, '0.0.0.0', () => {
+  console.log(`Server running at  ${port}`);
 });
- 
 
   
