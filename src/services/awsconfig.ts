@@ -35,7 +35,7 @@ import multerS3 from 'multer-s3'
   
     try {
       await s3.send(new DeleteObjectCommand(params));
-      console.log('Image deleted successfully');
+      return 1
     } catch (error) {
       console.error('Error deleting image:', error);
       return error

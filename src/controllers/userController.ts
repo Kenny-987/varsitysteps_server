@@ -122,7 +122,6 @@ export async function editImage(req: Request, res: Response) {
       
             // Delete the old profile picture from S3
             if(currentImage.rowCount !== 0 ){
-              console.log(currentImage)
                 const oldImageUrl = currentImage.rows[0].profile_image;
                 if (oldImageUrl) {
                   await deleteImage(oldImageUrl);
@@ -148,20 +147,23 @@ export async function editImage(req: Request, res: Response) {
 
   //function to delete profile image
 export async function deleteProfileImage(req: Request, res: Response) {
-    console.log('hit delete api'); 
     if(req.isAuthenticated()){
         try {
             const userId = req.params.userId
-        console.log(userId)
         const currentImage = await client.query(`SELECT profile_image FROM users WHERE id = $1`, [userId]);
 
         if(currentImage.rowCount !== 0 ){
               const oldImageUrl = currentImage.rows[0].profile_image;
               if (oldImageUrl) {
-                await deleteImage(oldImageUrl);
+               const isDeleted =  await deleteImage(oldImageUrl);
+               if(isDeleted ==1){
+                   const response =  await client.query(`UPDATE users SET profile_image = $1 WHERE id = $2 RETURNING *`,[null,userId])
+                   const user = response.rows[0];
+                   res.status(200).json({user})
+
+               }
               }
-              await client.query(`UPDATE users SET profile_image = $1 WHERE id = $2`,[null,userId])
-              res.status(200).json({message:'image gone'})
+            
           }else{
             return res.status(404).json({message:'no image to delete'})
           }
