@@ -9,6 +9,7 @@ export const initializeSocket = (server:any)=>{
         io = new Server(server, {
             cors: {
               origin: 'https://varsitysteps.co.zw', 
+              
               methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
               credentials: true,
             },
