@@ -32,7 +32,7 @@ export async function connectionRequest(req: Request, res: Response) {
             
             ///// funtionality to send email notifications on request
             //get tutor email
-            const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[tutor_id])
+            const email = await client.query(`SELECT email FROM users WHERE id=$1`,[tutor_id])
             console.log(email);
             
             const subject = `New VarsitySteps connection request.`
@@ -134,11 +134,11 @@ export async function connectionResponse(req: Request, res: Response) {
             const extra_info = JSON.stringify({responder_id})
             await client.query(`INSERT INTO notifications(user_id,message,type,extra_info) VALUES ($1,$2,$3,$4)`,[user_id,message,type,extra_info])  
 
-            const email = await client.query(`SELECT email FROM users WHERE id=$1 AND is_verified = true`,[user_id])
+            const email = await client.query(`SELECT email FROM users WHERE id=$1`,[user_id])
             const subject = `A tutor has accepted your connection request on VarsitySteps`
             const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: https://varsitysteps.co.zw/dashboard`
             if(email.rows.length>0){
-                return  sendMail(email.rows[0].email,subject,message,res)
+                return  sendMail(email.rows[0].email,subject,emailmessage,res)
               }
               res.status(200).json({message:'requets sent'})
         }
