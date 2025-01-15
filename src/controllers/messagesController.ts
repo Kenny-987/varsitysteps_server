@@ -8,7 +8,7 @@ export const initializeSocket = (server:any)=>{
     try { 
         io = new Server(server, {
             cors: {
-              origin: 'https://varsitysteps.co.zw', 
+              origin: 'https://www.varsitysteps.co.zw', 
               
               methods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT'],
               credentials: true,
@@ -20,7 +20,7 @@ export const initializeSocket = (server:any)=>{
               });
             socket.on('chatMessage',async(data:any)=>{
                 const {sender_id,message,receiver_id}= data
-                console.log('incoming data: ',data)
+                
                 const checkChat = await client.query(`SELECT * FROM chats 
                     WHERE user_1 = $1 AND user_2 = $2
                     OR user_1 = $2 AND user_2 = $1`,
@@ -39,7 +39,7 @@ export const initializeSocket = (server:any)=>{
                    INSERT INTO messages (chat_id,sender_id,receiver_id, message) VALUES($1,$2,$3,$4)`,
                 [chatId,sender_id,receiver_id,message])     
         
-                console.log('this is data', data)
+                
                 socket.to(receiver_id).emit('chatMessage', data);
     
           // Optionally, send the message back to the sender
@@ -81,7 +81,7 @@ export async function sendMessages(req:Request,res:Response) {
             const content = await client.query(`
                 INSERT INTO messages (chat_id,sender_id, content) VALUES($1,$2,$3) RETURNING *`,
             [chatId,sender_id,message])
-            console.log(content)
+            
             res.status(201).json(content.rows[0])
         } catch (error) {
             console.error(error)
@@ -145,13 +145,13 @@ export async function getChats(req:Request,res:Response) {
 
 //function to check chats between two people
 export async function checkChat(req:Request,res:Response) {
-    console.log('hit the check chat api');
+  
     
     if(req.isAuthenticated()){  
         try {
             const user1 = req.query.user1
             const user2 = req.query.user2
-            console.log('these are users: ',user1,user2)
+        
         let chatsExist:boolean
         const result = await client.query(`
             select * from chats
@@ -162,7 +162,7 @@ export async function checkChat(req:Request,res:Response) {
             chatsExist = false
         }else{
             chatsExist = true
-            console.log('chat exists');
+            
         }
         res.status(200).json(chatsExist)
         } catch (error) {
@@ -179,7 +179,7 @@ export async function checkChat(req:Request,res:Response) {
 export async function getMessages(req:Request,res:Response) {
     if(req.isAuthenticated()){
         const chat_id  = req.params.chat_id
-        console.log(chat_id)
+        
         try {
         
             const messages = await client.query(
