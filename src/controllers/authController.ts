@@ -200,47 +200,97 @@ export async function newPassword (req:Request,res:Response){
 }
 
 //function to delete user account
-export async function deleteAccount(req: Request, res: Response,next:NextFunction) {
-    console.log('hit first delete endpoint');
+// export async function deleteAccount(req: Request, res: Response,next:NextFunction) {
     
-    if(req.isAuthenticated()){
-        console.log('hit delete endpoint');
+//     if(req.isAuthenticated()){
+//         console.log('hit delete endpoint');
         
-     const userId = req.user?.id
-     const {password} = req.body 
-     console.log(password);
+//      const userId = req.user?.id
+//      const {password} = req.body 
+//      console.log(password);
      
-     const result = await client.query(`SELECT * FROM users WHERE id = $1`, [userId]);
-     const user = result.rows[0];
-     if (!user) {
-         console.log('no user found')
-         return res.status(404).json({msg:'No such user'})
-     }
-     const match = await bcrypt.compare(password, user.password);
-     if (!match) {
-         console.log('incorrect code')
-         return res.status(401).json({message:"Incorrect password"});
-     }else{
-       const logout = async()=>{
-        req.logout((err) => {
-            if (err) { return next(err); }
+//      const result = await client.query(`SELECT * FROM users WHERE id = $1`, [userId]);
+//      const user = result.rows[0];
+//      if (!user) {
+//          console.log('no user found')
+//          return res.status(404).json({msg:'No such user'})
+//      }
+//      const match = await bcrypt.compare(password, user.password);
+//      if (!match) {
+//          return res.status(401).json({message:"Incorrect password"});
+//      }else{
+//        const logout = async()=>{
+//         req.logout((err) => {
+//             if (err) { return next(err); }
     
-            // Destroy the session
-            req.session.destroy((err) => {
+//             // Destroy the session
+//             req.session.destroy((err) => {
+//                 if (err) {
+//                     return res.status(500).json({ message: 'Failed to destroy session' });
+//                 }
+    
+//                 // Clear the cookie
+//                 res.clearCookie('connect.sid', { path: '/' });
+                
+//             });
+//         });
+//        } 
+//         await logout()
+//          await client.query(`DELETE FROM users WHERE id = $1`,[userId])
+//          return res.status(200).json({message:"Account Deleted"});
+//      }
+    
+//     }
+//  }
+export async function deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.isAuthenticated()) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+
+        console.log('hit delete endpoint');
+        const userId = req.user?.id;
+        const { password } = req.body;
+        const result = await client.query(`SELECT * FROM users WHERE id = $1`, [userId]);
+        const user = result.rows[0];
+
+        if (!user) {
+            console.log('no user found');
+            return res.status(404).json({ message: 'No such user' });
+        }
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+
+        // Logout the user and clear their session
+        req.logout((err) => {
+            if (err) {
+                console.error("Logout error:", err);
+                return next(err);
+            }
+
+            req.session.destroy(async (err) => {
                 if (err) {
+                    console.error("Session destroy error:", err);
                     return res.status(500).json({ message: 'Failed to destroy session' });
                 }
-    
-                // Clear the cookie
+
                 res.clearCookie('connect.sid', { path: '/' });
-                
+
+                // Delete the user account
+                try {
+                    await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
+                    return res.status(200).json({ message: "Account Deleted" });
+                } catch (dbError) {
+                    console.error("Database error:", dbError);
+                    return res.status(500).json({ message: "Failed to delete account" });
+                }
             });
         });
-       } 
-        await logout()
-         await client.query(`DELETE FROM users WHERE id = $1`,[userId])
-         return res.status(200).json({message:"Account Deleted"});
-     }
-    
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        next(error);
     }
- }
+}

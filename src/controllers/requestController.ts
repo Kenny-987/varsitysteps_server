@@ -90,7 +90,7 @@ export async function checkConnection(req: Request, res: Response) {
                 WHERE (student_id = $1 AND tutor_id = $2)
                 OR (student_id = $2 AND tutor_id = $1)
                 `,[student_id,tutor_id])
-            console.log(result.rows[0].status)
+            
             if(result.rows.length >0){
                 const status = result.rows[0].status
                 if(status === 'connected'){
