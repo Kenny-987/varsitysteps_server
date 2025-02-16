@@ -110,7 +110,6 @@ export async function editImage(req: Request, res: Response) {
             const file = req.file as any; 
         
             if (!file) {
-              console.log('no file')
               return res.status(400).json({ message: 'No file uploaded' });
             }
 
@@ -186,12 +185,10 @@ export async function editPassword(req: Request, res: Response, next: NextFuncti
              const user = result.rows[0];
 
         if (!user) {
-            console.log('no user found')
             return res.status(404).json({msg:'No such user'})
         }
         const match = await bcrypt.compare(currentPassword, user.password);
         if (!match) {
-            console.log('incorrect code')
             return res.status(401).json({message:"incorrect password"});
         }else{
             const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -221,7 +218,7 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                         JOIN user_achievements ua ON ua.achievement_id = a.id
                         WHERE ua.user_id = $1 AND a.title = 'Verified Scholar';
                     `,[userId])
-                    if(achievement.rows[0]>0){
+                    
                     if(!achievement.rows[0].unlocked){
                         await client.query(`
                             UPDATE user_achievements SET unlocked = true, unlocked_at = CURRENT_DATE
@@ -233,7 +230,6 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                                 WHERE user_id = $2
                                 `,[achievement.rows[0].reward,userId])
                             }
-                        }
             }
             //get role
             const userRolesResult = await client.query(`
@@ -348,14 +344,12 @@ export  async function getMyTutors(req: Request, res: Response) {
 //fuction to get student profile
 export async function studentProfile (req: Request, res: Response){
     const studentId = req.params.id
-    console.log(studentId)
     try {
         const result = await client.query(`SELECT id,username,location, profile_image,students.*
             FROM users 
             LEFT JOIN students  
             ON users.id = students.user_id
             WHERE students.user_id = $1`,[studentId]) 
-            console.log(result.rows[0])
             const student =  result.rows[0]
             if(student.length < 0){
                 return res.status(404).json({message:'no tutor found'})
