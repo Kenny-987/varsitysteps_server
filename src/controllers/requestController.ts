@@ -39,11 +39,12 @@ export async function connectionRequest(req: Request, res: Response) {
             const message = `You have recieved a new connection request from ${studentDetails.rows[0].username}. \n Visit your dashboard to accept the student: https://varsitysteps.co.zw/dashboard`
 
             if(email.rows.length>0){
-              return  sendMail(email.rows[0].email,subject,message,res)
+              await  sendMail(email.rows[0].email,subject,message)
+              return res.status(200).json({message:'request sent'})
+            }else{
+                res.status(200).json({message:'request sent'})
             }
           
-            
-            res.status(200).json({message:'requets sent'})
         } catch (error) {
             console.error(error)
             res.status(500).json({message:'error sending request'})
@@ -139,9 +140,12 @@ export async function connectionResponse(req: Request, res: Response) {
             const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: https://varsitysteps.co.zw/dashboard`
             
             if(email.rows.length>0){
-                return  sendMail(email.rows[0].email,subject,emailmessage,res)
+                sendMail(email.rows[0].email,subject,emailmessage)
+                return res.status(200).json({message:'request sent'})
+              }else{
+                res.status(200).json({message:'request sent'})
               }
-              res.status(200).json({message:'requets sent'})
+             
         }
     } catch (error) {
         console.log(error)

@@ -213,6 +213,29 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
     if(req.isAuthenticated()){
         try {
             const userId = req.user?.id
+            //check if user email is verified and add points and achievements
+            const user = await client.query(`
+                SELECT is_verified FROM users WHERE id = $1
+                `,[userId])
+            if(user.rows[0].is_verified){
+                const achievement = await client.query(`
+                    SELECT a.id, ua.unlocked,a.reward,a.title,a.goal 
+                        FROM achievements a
+                        JOIN user_achievements ua ON ua.achievement_id = a.id
+                        WHERE ua.user_id = $1 AND a.title = 'Verified Scholar';
+                    `,[userId])
+                    if(!achievement.rows[0].unlocked){
+                        await client.query(`
+                            UPDATE user_achievements SET unlocked = true, unlocked_at = CURRENT_DATE
+                             WHERE user_id = $1 AND achievement_id = $2
+                            `,[userId,achievement.rows[0].id])
+        
+                            await client.query(`
+                                UPDATE user_game_data SET points = points + $1, achievements = achievements + 1
+                                WHERE user_id = $2
+                                `,[achievement.rows[0].reward,userId])
+                            }
+            }
             //get role
             const userRolesResult = await client.query(`
                 SELECT roles.role_name

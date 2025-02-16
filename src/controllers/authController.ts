@@ -15,8 +15,12 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
         //creating a new user
         const user = await client.query('INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *', [username, email, hashedPassword]);
 
+        //insert into user_game_data
+        await client.query(`
+            INSERT INTO user_game_data (user_id) VALUES ($1)
+            `,[user.rows[0].id])
+            
         //get roles
-        //creating a new student
 
         if(role==='student'){
              const getRole = await client.query('SELECT id FROM roles WHERE role_name = $1',[role])
@@ -112,7 +116,8 @@ export async function verifyEmail(req:Request,res:Response){
 
             const subject = 'VaristySteps Email verification code'
             const message = `Your verification code is: ${otp} `
-            sendMail(email,subject,message,res)
+            await sendMail(email,subject,message)
+            res.status(200).json({message:'action successfull'})
         } catch (error) {
             console.error()
             res.status(500).json({message:'internal server error'})
@@ -150,7 +155,8 @@ export async function resetPassword(req:Request,res:Response){
             If you did not request this, you can ignore this email.
             `
 
-            sendMail(email,subject,message,res)
+            await sendMail(email,subject,message)
+            res.status(200).json({message:'action successful'})
         }
     } catch (error) {
         console.error(error)
@@ -161,7 +167,8 @@ export async function resetPassword(req:Request,res:Response){
 export async function otp(req:Request,res:Response) {
     try {
         const {otp,flag,email}=req.body
-        
+        const user_id = req.user?.id
+        let unlockedAchievements = []
         
         if(flag === 'emailVerification'){
             const dbOtp = await client.query('SELECT otp FROM users WHERE email = $1',[email])
@@ -169,7 +176,29 @@ export async function otp(req:Request,res:Response) {
             
             if(Number(otp) === dbOtp.rows[0].otp){
                 await client.query(`UPDATE users SET is_verified = true WHERE email = $1`,[email])
-                res.status(200).json({message:'verification successful'})
+                const achievement = await client.query(`
+                    SELECT a.id, ua.unlocked,a.reward,a.title,a.goal 
+                    FROM achievements a
+                        JOIN user_achievements ua ON ua.achievement_id = a.id
+                        WHERE ua.user_id = $1 AND a.title = 'Verified Scholar';
+                    `,[user_id])
+
+                    if(!achievement.rows[0].unlocked){
+                        await client.query(`
+                            UPDATE user_achievements SET unlocked = true, unlocked_at = CURRENT_DATE
+                             WHERE user_id = $1 AND achievement_id = $2
+                            `,[user_id,achievement.rows[0].id])
+        
+                            await client.query(`
+                                UPDATE user_game_data SET points = points + $1, achievements = achievements + 1
+                                WHERE user_id = $2
+                                `,[achievement.rows[0].reward,user_id])
+        
+                                unlockedAchievements.push({
+                                    message: `You unlocked the achievement: ${achievement.rows[0].title}!`,
+                                })
+                            }
+                            res.status(200).json(unlockedAchievements)
             }else{
                 res.status(401).json({message:'incorrect otp code'})
             }

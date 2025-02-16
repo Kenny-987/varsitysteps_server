@@ -1,8 +1,7 @@
-import nodemailer from 'nodemailer'
-import { Request, Response } from 'express';
+import nodemailer from 'nodemailer';
 
-function sendMail(email:any,subject:any,message:any,res:Response){
-  try {
+export function sendMail(email: string, subject: string, message: string): Promise<void> {
+  return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -13,28 +12,22 @@ function sendMail(email:any,subject:any,message:any,res:Response){
         rejectUnauthorized: false,
       },
     });
+  
     const mailOptions = {
       from: "varsitysteps@gmail.com",
-      to: email, 
+      to: email,
       subject: subject,
-      text: `${message}`,
+      text: message,
     };
   
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error(error);
-        return res.status(500).send("Internal Server Error");
-        
+        console.error("Error sending email:", error);
+        return reject(error);
       } else {
         console.log("Email sent: " + info.response);
-        res.status(200).send("Email sent successfully");
+        return resolve();
       }
     });
-  } catch (error) {
-    console.error(error)
-    return res.status(500).json({message:'Internal server error'})
-  }
-    
+  });
 }
-
-export {sendMail}

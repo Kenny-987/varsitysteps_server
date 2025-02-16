@@ -24,7 +24,6 @@ export async function getInstitutions(req: Request, res: Response) {
   
 export async function searchInstitution(req:Request,res:Response) {
     const {query} = req.query
-    console.log(query)
     try {
         const result = await client.query(`
             SELECT * FROM institutions

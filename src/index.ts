@@ -9,6 +9,10 @@ import instituteRoute from './routes/instituteRoutes'
 import messagesRoute from './routes/messagesRoute'
 import postsRoute from './routes/postsRoute'
 import careersRoute from './routes/careersRoute'
+import quizRoute from './routes/quizRoutes'
+import gamesRoute from './routes/gamesRoutes'
+import payRoutes from './routes/payRoutes'
+import feedbackRoute from './routes/feedbackRoute'
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
@@ -18,9 +22,7 @@ import http from 'http';
 import './middleware/passport'; 
 import { initializeSocket } from './controllers/messagesController';
 import 'dotenv/config'
-// import {job} from './services/cron'
 
-//job.start()
 const pool = new Pool({
   user: process.env.productionUser,
   host: process.env.productionHost,
@@ -47,7 +49,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'https://www.varsitysteps.co.zw',
+  origin: '[https://www.varsitysteps.co.zw,http://localhost:5173]',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
@@ -82,9 +84,13 @@ app.use('/institutes',instituteRoute)
 app.use('/messages',messagesRoute)
 app.use('/posts',postsRoute)
 app.use('/careers',careersRoute)
+app.use('/quiz',quizRoute)
+app.use('/gamedata',gamesRoute)
+app.use('/pay',payRoutes)
+app.use('/feedback',feedbackRoute)
 
 server.listen(3000, '0.0.0.0', () => {
   console.log(`Server running at  ${port}`);
 });
 
-  
+ 

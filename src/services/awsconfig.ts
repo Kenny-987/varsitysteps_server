@@ -57,3 +57,18 @@ import multerS3 from 'multer-s3'
     }),
     limits: { fileSize: 1024 * 1024 * 10 }
   });
+
+  export const uploadProof = multer({
+    storage: multerS3({
+      s3: s3,
+      bucket: process.env.bucket as string,
+      metadata: (req, file, cb) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (req, file, cb) => {
+        // Unique key for the file
+        cb(null, `paymentfiles/${Date.now().toString()}-${file.originalname}`);
+      },
+    }),
+    limits: { fileSize: 1024 * 1024 * 10 }
+  });
