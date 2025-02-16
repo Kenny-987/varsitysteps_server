@@ -17,11 +17,8 @@ declare global{
 export async function editUser(req: Request, res: Response, next: NextFunction) {
     if(req.isAuthenticated()){
         try { 
-            console.log('hit edit api');
-        
         const userId = req.params.userId
         const newUserData = req.body
-        console.log("user ID: ",userId," user data: ",newUserData)
         
         const userUpdates:any={}
         const studentUpdates:any={}
