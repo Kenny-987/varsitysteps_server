@@ -224,7 +224,7 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                         JOIN user_achievements ua ON ua.achievement_id = a.id
                         WHERE ua.user_id = $1 AND a.title = 'Verified Scholar';
                     `,[userId])
-                    if(achievement){
+                    if(achievement.rows[0]>0){
                     if(!achievement.rows[0].unlocked){
                         await client.query(`
                             UPDATE user_achievements SET unlocked = true, unlocked_at = CURRENT_DATE
