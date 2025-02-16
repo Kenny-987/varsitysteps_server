@@ -49,7 +49,7 @@ const sessionStore = new PgSessionStore({
 
 app.use(bodyParser.json({ limit: '100mb' }));
 const corsOptions = {
-  origin: 'http://localhost:3001',
+  origin: 'https://www.varsitysteps.co.zw',
   credentials: true, 
    methods: ['GET', 'POST', 'OPTIONS','PATCH','PUT','DELETE'],
 };
