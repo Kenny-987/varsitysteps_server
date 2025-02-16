@@ -224,6 +224,7 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                         JOIN user_achievements ua ON ua.achievement_id = a.id
                         WHERE ua.user_id = $1 AND a.title = 'Verified Scholar';
                     `,[userId])
+                    if(achievement){
                     if(!achievement.rows[0].unlocked){
                         await client.query(`
                             UPDATE user_achievements SET unlocked = true, unlocked_at = CURRENT_DATE
@@ -235,6 +236,7 @@ export async function getUserInfo(req: Request, res: Response, next: NextFunctio
                                 WHERE user_id = $2
                                 `,[achievement.rows[0].reward,userId])
                             }
+                        }
             }
             //get role
             const userRolesResult = await client.query(`
