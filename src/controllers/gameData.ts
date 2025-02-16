@@ -80,6 +80,7 @@ export async function leaderboard(req:Request,res:Response) {
         FROM users
         LEFT JOIN user_game_data as g
         ON g.user_id = users.id
+        LIMIT 25
          `)
         res.status(200).json(leaderboard.rows)
     } catch (error) {
