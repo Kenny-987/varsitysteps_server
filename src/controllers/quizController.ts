@@ -5,13 +5,6 @@ import { updateLBA, updateTiers } from '../utility/updateGameData';
 export async function getQuiz(req:Request,res:Response) {
     try {
         const {query} = req.query
-        // const quizzes = await client.query(`
-        //     select quizzes.topic,quiz_date::TEXT,quizzes.id as quiz_id,
-        //     questions.question_text,questions.answer_options,questions.extra_info,questions.correct_answer
-        //     FROM quizzes
-        //     LEFT JOIN questions ON questions.quiz_id = quizzes.id
-        //     WHERE quizzes.topic ILIKE $1 AND quiz_date = CURRENT_DATE
-        //     `,[`%${query}%`])
         const quizzes = await client.query(`
            SELECT qu.quiz_date::TEXT,qu.id as quiz_id, qt.topic AS topic_name, qn.question_text, qn.answer_options,qn.correct_answer, qn.extra_info
            FROM quizzes qu
@@ -120,3 +113,28 @@ export async function addPoints(req:Request,res:Response) {
     }
 }
 
+export async function getRandomQuiz(req:Request,res:Response) {
+    try {
+        const {query} = req.query
+        let topic 
+        if(query == "any"){
+            topic=''
+        }else{
+            topic=query
+        }
+        const quizzes = await client.query(`
+           SELECT qu.quiz_date::TEXT, qu.id AS quiz_id, qt.topic AS topic_name, 
+           qn.question_text, qn.answer_options, qn.correct_answer, qn.extra_info
+           FROM quizzes qu
+           JOIN quiz_topics qt ON qu.topic_id = qt.id
+           JOIN questions qn ON qu.id = qn.quiz_id
+           WHERE ($1 ='' OR qt.topic ILIKE $1)
+           ORDER BY RANDOM() 
+           LIMIT 10;
+            `,[`%${topic}%`])
+            res.status(200).json(quizzes.rows)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({message:'internal server error'})
+    }
+}
