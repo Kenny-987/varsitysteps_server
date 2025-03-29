@@ -20,7 +20,7 @@ import PgSession from 'connect-pg-simple'
 import { Pool } from 'pg';
 import http from 'http';
 import './middleware/passport'; 
-import { initializeSocket } from './controllers/messagesController';
+import { initializeSocket } from './services/socket';
 import 'dotenv/config'
 
 const pool = new Pool({
@@ -73,8 +73,8 @@ app.use(
     })
   );
   
-  app.use(passport.initialize());
-  app.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use("/auth",authRoute)
 app.use('/user',userRoute)

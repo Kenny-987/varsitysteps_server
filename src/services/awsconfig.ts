@@ -29,10 +29,9 @@ import multerS3 from 'multer-s3'
   // Function to delete an image from S3
   export const deleteImage = async (imageUrl: string) => {
     const params = {
-      Bucket: process.env.bucket,
-      Key: imageUrl.replace(`https://varsitystepsbucket.s3.eu-north-1.amazonaws.com/`, ''),
+      Bucket: process.env.bucket as string,
+      Key: decodeURI(imageUrl.replace(`https://varsitystepsbucket.s3.eu-north-1.amazonaws.com/`, '')),
     };
-  
     try {
       await s3.send(new DeleteObjectCommand(params));
       return 1
@@ -43,7 +42,7 @@ import multerS3 from 'multer-s3'
   };
 
   /// function to upload post images
-  export const uploadPostImages = multer({
+  export const uploadFiles = multer({
     storage: multerS3({
       s3: s3,
       bucket: process.env.bucket as string,
@@ -52,7 +51,7 @@ import multerS3 from 'multer-s3'
       },
       key: (req, file, cb) => {
         // Unique key for the file
-        cb(null, `post_files/${Date.now().toString()}-${file.originalname}`);
+        cb(null, `tutoring_files/${Date.now().toString()}-${file.originalname}`);
       },
     }),
     limits: { fileSize: 1024 * 1024 * 10 }
@@ -72,3 +71,4 @@ import multerS3 from 'multer-s3'
     }),
     limits: { fileSize: 1024 * 1024 * 10 }
   });
+

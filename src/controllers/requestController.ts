@@ -2,12 +2,23 @@
 import { Request, Response } from 'express';
 import { client } from '../services/connect';
 import { sendMail } from '../services/mail';
+import { getSocketInstance,onlineUsers } from '../services/socket';
+import { Server,Socket } from 'socket.io'
 
+
+
+// export const requestSockets =(io: Server, socket: Socket)=>{
+   
+//     const tutorSocke
+//     socket.on('request',(data)=>{
+//     })
+// }
 
 export async function connectionRequest(req: Request, res: Response) {
     if(req.isAuthenticated()){
         const{student_id,tutor_id} = req.body
-        console.log(student_id,tutor_id)
+        const io = getSocketInstance()
+        const tutorSocketId = onlineUsers[tutor_id]
         try {
             const existingRequest = await client.query(`
             SELECT * FROM connections WHERE student_id = $1 AND tutor_id = $2 AND status = $3
@@ -17,9 +28,8 @@ export async function connectionRequest(req: Request, res: Response) {
             } 
 
             //fetching student details
-            const studentDetails = await client.query(`SELECT users.username, users.location, students.programme, students.institution 
+            const studentDetails = await client.query(`SELECT users.username
                 FROM users 
-                LEFT JOIN students ON students.user_id = users.id
                 WHERE users.id = $1`,[student_id])
             
                 if (studentDetails.rows.length === 0) {
@@ -30,20 +40,31 @@ export async function connectionRequest(req: Request, res: Response) {
                 INSERT INTO connections (student_id,tutor_id) VALUES ($1, $2)
                 `,[student_id,tutor_id])
             
+            
             ///// funtionality to send email notifications on request
             //get tutor email
             const email = await client.query(`SELECT email FROM users WHERE id=$1`,[tutor_id])
-            console.log(email);
-            
             const subject = `New VarsitySteps connection request.`
             const message = `You have recieved a new connection request from ${studentDetails.rows[0].username}. \n Visit your dashboard to accept the student: https://varsitysteps.co.zw/dashboard`
 
             if(email.rows.length>0){
-              await  sendMail(email.rows[0].email,subject,message)
-              return res.status(200).json({message:'request sent'})
-            }else{
-                res.status(200).json({message:'request sent'})
+                try {
+                    await sendMail(email.rows[0].email, subject, message);
+                } catch (emailError) {
+                    console.error("Error sending email:", emailError);
+                    return res.status(200).json({ message: "Request sent, but email notification failed" });
+                }
             }
+            if(tutorSocketId){
+                io.to(tutorSocketId).emit('notification',{
+                    message:`You have received a new connection request from a student: ${studentDetails.rows[0].username}`
+                })
+                io.to(tutorSocketId).emit('requests',{
+                    message:'refreshing requests'
+                })
+            }
+                res.status(200).json({message:'request sent'})
+            
           
         } catch (error) {
             console.error(error)
@@ -98,22 +119,15 @@ export async function checkConnection(req: Request, res: Response) {
                     res.status(200).json({isconnected: true, status:'connected'})
                 }else if (status === 'pending'){
                     res.status(200).json({isconnected: false, status:'pending'})
-                }else{
-                res.status(200).json({isconnected: false,status:'not connected'})
-                }
-            } else{
-                res.status(404).json({message:'no connection'})
+                }    
+            }else{
+            res.status(200).json({isconnected: false,status:'not connected'})
             }
-              
         } catch (error) {
             console.error(error)
         }
         
-    }else{
-        return res.status(401).json({msg:"No access please login"})
     }
-
-
 }
 
 
@@ -128,23 +142,59 @@ export async function connectionResponse(req: Request, res: Response) {
             //GET TUTOR NAME
             const responder_id = req.user?.id
             const responder = await client.query(`SELECT username,id FROM users WHERE id = $1`,[req.user?.id])
+            const student_id = response.rows[0].student_id
+            const studentSocketId = onlineUsers[student_id]
+            const io = getSocketInstance()
+            try {
+                const existingChat = await client.query(
+                    `SELECT c.id FROM chats c
+                     JOIN participants p1 ON c.id = p1.chat_id
+                     JOIN participants p2 ON c.id = p2.chat_id
+                     WHERE p1.user_id = $1 AND p2.user_id = $2`,
+                    [responder_id, student_id])
 
-            const user_id = response.rows[0].student_id
+                    let chatId;
+                    if (existingChat.rows.length==0) {
+                      // If chat exists, use that chat ID
+                      const newChat = await client.query(
+                        `INSERT INTO chats (created_at, updated_at)
+                         VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                         RETURNING id`
+                      );
+                      chatId = newChat.rows[0].id;
+                    }
+                    await client.query(
+                        `INSERT INTO participants (chat_id, user_id)
+                         VALUES ($1, $2), ($1, $3)`,
+                        [chatId, responder_id, student_id]
+                      );
+            } catch (error) {
+                console.error(error)
+            }
+            if(studentSocketId){
+                io.to(studentSocketId).emit('notification',{
+                    message:`${responder.rows[0].username} has accepted your request`
+                })
+            }
             const message = `${responder.rows[0].username} accepted your connection request`
             const type = 'response'
             const extra_info = JSON.stringify({responder_id})
-            await client.query(`INSERT INTO notifications(user_id,message,type,extra_info) VALUES ($1,$2,$3,$4)`,[user_id,message,type,extra_info])  
+            await client.query(`INSERT INTO notifications(user_id,message,type,extra_info) VALUES ($1,$2,$3,$4)`,[student_id,message,type,extra_info])  
 
-            const email = await client.query(`SELECT email FROM users WHERE id=$1`,[user_id])
+            const email = await client.query(`SELECT email FROM users WHERE id=$1`,[student_id])
             const subject = `A tutor has accepted your connection request on VarsitySteps`
             const emailmessage = `${responder.rows[0].username} accepted your connection request. /n Visit your dashboard and start chatting with your tutors: https://varsitysteps.co.zw/dashboard`
             
             if(email.rows.length>0){
-                sendMail(email.rows[0].email,subject,emailmessage)
-                return res.status(200).json({message:'request sent'})
-              }else{
-                res.status(200).json({message:'request sent'})
+                    try {
+                        await sendMail(email.rows[0].email, subject, emailmessage);
+                    } catch (emailError) {
+                        console.error("Error sending email:", emailError);
+                        return res.status(200).json({ message: "Request sent, but email notification failed" });
+                    }
               }
+                res.status(200).json({message:'request accepted'})
+              
              
         }
     } catch (error) {
@@ -155,6 +205,7 @@ export async function connectionResponse(req: Request, res: Response) {
         return res.status(204).json({msg:"No access please login"})
     }
 }
+
 export async function getNotifications(req: Request, res: Response) {
     if(req.isAuthenticated()){
         const user_id= req.user?.id

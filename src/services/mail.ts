@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
-export function sendMail(email: string, subject: string, message: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+export function sendMail(email: string | string[], subject: string, message: string): Promise<void> {
+  return new Promise(async(resolve, reject) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -12,22 +12,24 @@ export function sendMail(email: string, subject: string, message: string): Promi
         rejectUnauthorized: false,
       },
     });
-  
-    const mailOptions = {
-      from: "varsitysteps@gmail.com",
-      to: email,
-      subject: subject,
-      text: message,
-    };
-  
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-        return reject(error);
-      } else {
-        console.log("Email sent: " + info.response);
-        return resolve();
-      }
+    const mailList = Array.isArray(email) ? email : [email]
+    try {
+      const emailPromises = mailList.map((email) => {
+        const mailOptions = {
+          from: "varsitysteps@gmail.com",
+          to: email,
+          subject: subject,
+          text: message,
+        };
+ 
+        return transporter.sendMail(mailOptions)
+        .then(info => console.log(`✅ Email sent to ${email}: ${info.response}`))
+        .catch(error => console.error(`❌ Failed to send email to ${email}:`, error));
     });
+    await Promise.all(emailPromises); // Wait for all emails to be sent
+      resolve();
+    } catch (error) {
+      reject(new Error("Email sending failed"));
+    }
   });
 }

@@ -351,8 +351,8 @@ export async function studentProfile (req: Request, res: Response){
             ON users.id = students.user_id
             WHERE students.user_id = $1`,[studentId]) 
             const student =  result.rows[0]
-            if(student.length < 0){
-                return res.status(404).json({message:'no tutor found'})
+            if(!student){
+                return res.status(404).json({message:'no student found'})
             }
             res.status(200).json(student)
     } catch (error) {
