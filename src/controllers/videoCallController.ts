@@ -7,20 +7,19 @@ export const videoCall =(io: Server, socket: Socket)=>{
 
    socket.on('call-user', (data: { toUserId: string; fromUserId: string; offer: RTCSessionDescriptionInit,callerName:string }) => {
     const targetSocketId = onlineUsers[data.toUserId];
-
-   
-   
+    console.log('calling user');
+    
     if (targetSocketId) {
-    io.to(targetSocketId).emit('calling-user',{
+    io.to(targetSocketId).emit('incoming-call',{
         offer: data.offer,
         callerUserId: data.fromUserId,
         callerName:data.callerName
     })
-      io.to(targetSocketId).emit('call-made', {
-        offer: data.offer,
-        callerUserId: data.fromUserId,
-        callerName:data.callerName
-      });
+      // io.to(targetSocketId).emit('call-made', {
+      //   offer: data.offer,
+      //   callerUserId: data.fromUserId,
+      //   callerName:data.callerName
+      // });
     } else {
       const callerSocketId = onlineUsers[data.fromUserId];
       if(callerSocketId)
@@ -32,31 +31,35 @@ export const videoCall =(io: Server, socket: Socket)=>{
 
 socket.on('cancel-call',(data:{ toUserId: string; fromUserId: string})=>{
     const targetSocketId = onlineUsers[data.toUserId];
-    const callerSocketId = onlineUsers[data.fromUserId];
     console.log('call is being cancelled');
     
     if (targetSocketId) {
         io.to(targetSocketId).emit('call-cancelled', {
           message:'call cancelled'
         });
-        io.to(callerSocketId).emit('call-cancelled', {
-          message:'you cancelled'
+      }
+  })
+
+  socket.on('reject-call',(data:{ toUserId: string; fromUserId: string})=>{
+    const targetSocketId = onlineUsers[data.toUserId];
+    console.log('call is being cancelled');
+    
+    if (targetSocketId) {
+        io.to(targetSocketId).emit('call-rejected', {
+          message:'call not answered'
         });
       }
   })
 
-
-    socket.on('make-answer', (data: { toUserId: string; fromUserId: string; answer: RTCSessionDescriptionInit }) => {
+    socket.on('answer-call', (data: { toUserId: string; fromUserId: string; answer: RTCSessionDescriptionInit }) => {
     const targetSocketId = onlineUsers[data.toUserId];
     const callerSocketId = onlineUsers[data.fromUserId];
+    console.log('answering call');
+    
     if (targetSocketId) {
-      io.to(targetSocketId).emit('answer-made', {
+      io.to(targetSocketId).emit('call-answered', {
         answer: data.answer,
         responderUserId: data.fromUserId,
-      });
-      io.to(callerSocketId).emit('answer-made', {
-        answererId: data.fromUserId,
-        message: 'call answered',
       });
     }
   });
@@ -80,9 +83,13 @@ socket.on('cancel-call',(data:{ toUserId: string; fromUserId: string})=>{
     socket.on('ice-candidate', (data: { toUserId: string; fromUserId: string; candidate: RTCIceCandidateInit }) => {
     
     const targetSocketId = onlineUsers[data.toUserId];
-    
+    const callerSocketId = onlineUsers[data.fromUserId];
     if (targetSocketId) {
       io.to(targetSocketId).emit('ice-candidate', {
+        candidate: data.candidate,
+        fromUserId: data.fromUserId,
+      });
+      io.to(callerSocketId).emit('ice-candidate', {
         candidate: data.candidate,
         fromUserId: data.fromUserId,
       });
