@@ -21,10 +21,11 @@ export const initializeSocket = (server: HttpServer) => {
 
     io.on("connection", (socket) => {
       console.log("User connected:", socket.id);
-      socket.on("register", ({userId}: any) => {
-        onlineUsers[userId] = socket.id; // Store userId -> socketId
-        console.log(`User ${userId} registered with socket ID: ${socket.id}`);
-    });
+      const userId = socket.handshake.query.userId; // Retrieve userId from query
+      if (userId) {
+          onlineUsers[Number(userId)] = socket.id;
+          console.log(`User ${userId} registered with socket ID: ${socket.id}`); 
+      }
       // Attach feature-specific socket handlers
       chatSockets(io!, socket);
       videoCall(io!,socket)
