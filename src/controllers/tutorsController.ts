@@ -170,9 +170,10 @@ cron.schedule('0 0 * * *', () => {
 export async function uploadTutoringFiles(req:Request,res:Response) {
     if(req.isAuthenticated()){
         try {
-            const {file_type,student_id,class_id,tutor_id} = req.body   
+            const {file_type,student_id,class_id,tutor_id,format} = req.body   
         const files = req.files as any
-        const user_id = req.user.id
+        const user_id = req.user.id        
+        
         const io = getSocketInstance()
         
         let receiver_id
@@ -191,8 +192,8 @@ export async function uploadTutoringFiles(req:Request,res:Response) {
             await Promise.all(files.map(async (file: any) => {
                 await client.query(
                     `INSERT INTO files (uploader_id, student_id, class_id, filename, file_url, file_type, size, mimetype,tutor_id) 
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)`,
-                    [user_id, validStudentId, validClassId, file.originalname, file.location, file_type, file.size, file.mimetype,validTutorId]
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10)`,
+                    [user_id, validStudentId, validClassId, file.originalname, file.location, file_type, file.size, file.mimetype,validTutorId,format]
                 );
             }));
           }
