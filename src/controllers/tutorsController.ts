@@ -187,13 +187,13 @@ export async function uploadTutoringFiles(req:Request,res:Response) {
         const validStudentId = Number.isInteger(Number(student_id)) ? Number(student_id) : null;
         const validClassId = Number.isInteger(Number(class_id)) ? Number(class_id) : null;
         const validTutorId = Number.isInteger(Number(tutor_id)) ? Number(tutor_id) : null;
-
+        const fileFormat = format||null
         if(files){
             await Promise.all(files.map(async (file: any) => {
                 await client.query(
-                    `INSERT INTO files (uploader_id, student_id, class_id, filename, file_url, file_type, size, mimetype,tutor_id) 
+                    `INSERT INTO files (uploader_id, student_id, class_id, filename, file_url, file_type, size, mimetype,tutor_id,format) 
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10)`,
-                    [user_id, validStudentId, validClassId, file.originalname, file.location, file_type, file.size, file.mimetype,validTutorId,format]
+                    [user_id, validStudentId, validClassId, file.originalname, file.location, file_type, file.size, file.mimetype,validTutorId,fileFormat]
                 );
             }));
           }
