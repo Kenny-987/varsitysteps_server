@@ -58,111 +58,6 @@ console.log(data);
 }
        
 
-  //           socket.on('register', (data:any) => {
-  //   const userId = data.userId;
-  //   onlineUsers[userId] = socket.id;
-  //   console.log(`User ${userId} registered with socket ID: ${socket.id}`);
-  // });
-        
-  //  socket.on('call-user', (data: { toUserId: string; fromUserId: string; offer: RTCSessionDescriptionInit,callerName:string }) => {
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //  console.log('user is being called');
-   
-    
-  //   if (targetSocketId) {
-  //     io.to(targetSocketId).emit('call-made', {
-  //       offer: data.offer,
-  //       callerUserId: data.fromUserId,
-  //       callerName:data.callerName
-  //     });
-  //   } else {
-  //     const callerSocketId = onlineUsers[data.fromUserId];
-  //     if(callerSocketId)
-  //      io.to(callerSocketId).emit('user-offline', {
-  //       message:'user offline'
-  //     });
-  //   }
-  // });
-  //             //When the recipient answers the call, send back the answer.
-  //             socket.on('make-answer', (data: { toUserId: string; fromUserId: string; answer: RTCSessionDescriptionInit }) => {
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //   const callerSocketId = onlineUsers[data.fromUserId];
-  //   if (targetSocketId) {
-  //     io.to(targetSocketId).emit('answer-made', {
-  //       answer: data.answer,
-  //       responderUserId: data.fromUserId,
-  //     });
-  //     io.to(callerSocketId).emit('answer-made', {
-  //       answererId: data.fromUserId,
-  //       message: 'call answered',
-  //     });
-  //   }
-  // });
-            
-
-  // socket.on('end-call',(data:{ toUserId: string; fromUserId: string}) => {
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //   const callerSocketId = onlineUsers[data.fromUserId];
-  //   if (targetSocketId) {
-  //       io.to(targetSocketId).emit('call-cancelled', {
-  //         message:'call cancelled'
-  //       });
-  //       io.to(callerSocketId).emit('call-cancelled', {
-  //         message:'you cancelled'
-  //       });
-  //     }
-  // });
-
-
-              // Relay ICE candidates to allow connection negotiation.
-  //               socket.on('ice-candidate', (data: { toUserId: string; fromUserId: string; candidate: RTCIceCandidateInit }) => {
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //   if (targetSocketId) {
-  //     io.to(targetSocketId).emit('ice-candidate', {
-  //       candidate: data.candidate,
-  //       fromUserId: data.fromUserId,
-  //     });
-  //   }
-  // });
-            
-              // Notify the caller if the call was rejected.
-  //              socket.on('reject-call', (data: { toUserId: string; fromUserId: string }) => {
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //   if (targetSocketId) {
-  //     io.to(targetSocketId).emit('call-rejected', {
-  //       fromUserId: data.fromUserId,
-  //     });
-  //   }
-  // });
-
-  // socket.on('cancel-call',(data:{ toUserId: string; fromUserId: string})=>{
-  //   const targetSocketId = onlineUsers[data.toUserId];
-  //   const callerSocketId = onlineUsers[data.fromUserId];
-  //   console.log('call is being cancelled');
-    
-  //   if (targetSocketId) {
-  //       io.to(targetSocketId).emit('call-cancelled', {
-  //         message:'call cancelled'
-  //       });
-  //       io.to(callerSocketId).emit('call-cancelled', {
-  //         message:'you cancelled'
-  //       });
-  //     }
-  // })
-
-  //             socket.on('disconnect', () => {
-  //   for (const userId in onlineUsers) {
-  //     if (onlineUsers[userId] === socket.id) {
-  //       console.log(`User ${userId} disconnected`);
-  //       delete onlineUsers[userId];
-  //       break;
-  //     }
-  //   }
-  // });
-        
-
-
-// export const getSocketInstance = ()=>io
 
 //function to get chats
 export async function getChats(req:Request,res:Response) {
@@ -173,6 +68,8 @@ export async function getChats(req:Request,res:Response) {
                 `SELECT 
     c.id AS chat_id,c.is_group,
     u.id AS recipient_id,
+    u.is_online,
+    u.last_active,
     u.username AS recipient_name,
     u.profile_image AS recipient_profile_image,
     m.message AS last_message,

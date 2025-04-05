@@ -61,7 +61,7 @@ export async function tutorProfile(req: Request, res: Response, next: NextFuncti
     const tutorId = req.params.id
     try {
         const result = await client.query(`SELECT 
-        users.id, users.email, users.username, users.phone, users.location, users.profile_image, users.bio,is_premium,tutors.*,
+        users.id, users.email, users.username, users.phone, users.location, users.profile_image, users.bio,is_premium,last_active,is_online,tutors.*,
         (SELECT COUNT(*) FROM connections WHERE tutor_id = $1 AND status = 'connected') AS student_count,
         (SELECT COUNT(*) FROM tutor_rating WHERE tutor_id = $1) AS total_ratings,
         (SELECT AVG(rating) FROM tutor_rating WHERE tutor_id = $1) AS average_rating
@@ -247,12 +247,25 @@ export async function uploadTutoringFiles(req:Request,res:Response) {
            
        
           
-          const UpdatedFiles = await client.query(`
-            SELECT * FROM files 
-            WHERE uploader_id = $1
-            ORDER BY uploaded_at DESC 
-            `,[user_id])
-            res.status(200).json(UpdatedFiles.rows)
+            let updatedFiles
+            if(class_id!=='undefined'){
+                updatedFiles = await client.query(
+                    `SELECT * FROM files 
+                    WHERE class_id = $1`,[class_id]
+                )
+            }else{
+                let tutorID = (tutor_id === "undefined") ? null : tutor_id;
+                let studentID = (student_id=='null'|| student_id === "undefined") ? null : student_id;
+                
+
+                updatedFiles = await client.query(
+                    `SELECT * FROM files 
+                    WHERE uploader_id = $1 AND (student_id = $2 or tutor_id = $3)`,[user_id,studentID,tutorID]
+                )
+            }
+           
+            
+            res.status(200).json(updatedFiles.rows)
         } catch (error) {
             console.error(error)
             res.status(500).json({message:'internal server error'})
@@ -291,10 +304,7 @@ export async function getSharedFiles(req:Request,res:Response) {
     if(req.isAuthenticated()){
         try {
             const {uploader_id,tutor_id,student_id,class_id} = req.query
-            console.log("class ID: ",class_id);
-           
-            
-            
+
             let files
             if(class_id!=='undefined'){
                 files = await client.query(
@@ -433,26 +443,22 @@ export async function editClass(req:Request,res:Response) {
         }
     }
 }
-//
-// export async function deleteClass(req:Request,res:Response) {
-//     if(req.isAuthenticated()){
-//         const {classname,description,classid} = req.body
+
+export async function deleteClass(req:Request,res:Response) {
+    if(req.isAuthenticated()){
+        const classid = req.query.classid
         
-//         try {
-//             const classDetails = await client.query(`
-//                 UPDATE classes SET name = $1, description = $2 WHERE id = $3 RETURNING *
-//                 `,[classname,description,classid])
-//                 await client.query(`
-//                    UPDATE chats SET name =  $1 WHERE class_id = $2
-//                     `,[classname,classid])
-            
-//             res.status(200).json(classDetails.rows[0])
-//         } catch (error) {
-//             console.error(error)
-//             res.status(500).json({message:'server error'})
-//         }
-//     }
-// }
+        try {
+          await client.query(`DELETE FROM chats WHERE class_id = $1`,[classid])
+          await client.query(`DELETE FROM files WHERE class_id = $1`,[classid])
+          await client.query(`DELETE FROM classes WHERE id = $1`,[classid])  
+            res.status(200).json({message:'class deleted'})
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({message:'server error'})
+        }
+    }
+}
 
 export async function AddStudent(req:Request,res:Response) {
     if(req.isAuthenticated()){
@@ -503,7 +509,6 @@ export async function removeStudent(req:Request,res:Response) {
     if(req.isAuthenticated()){
     const user_id = req.user.id
     const {class_id,student_id}=req.query
-    console.log(class_id,student_id);
     
     try {
         const tutor_id = await client.query(`

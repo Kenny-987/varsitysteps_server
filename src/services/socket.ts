@@ -1,7 +1,9 @@
 import { Server as HttpServer } from "http";
+import { Request, Response} from 'express';
 import { Server } from "socket.io";
 import { chatSockets } from "../controllers/messagesController";
 import { videoCall } from "../controllers/videoCallController";
+import { client } from "./connect";
 // import { requestSockets } from "../controllers/requestController";
 // import { setupCallSockets } from "./callSockets";
 
@@ -19,11 +21,12 @@ export const initializeSocket = (server: HttpServer) => {
 
     console.log("Socket.io initialized"); 
 
-    io.on("connection", (socket) => {
+    io.on("connection",async (socket) => {
       console.log("User connected:", socket.id);
       const userId = socket.handshake.query.userId; // Retrieve userId from query
       if (userId) {
           onlineUsers[Number(userId)] = socket.id;
+          await client.query(`UPDATE users SET is_online = true WHERE id =$1`,[userId])
           console.log(`User ${userId} registered with socket ID: ${socket.id}`); 
       }
       // Attach feature-specific socket handlers
@@ -32,10 +35,13 @@ export const initializeSocket = (server: HttpServer) => {
     //   requestSockets(io!,socket)
     //   setupCallSockets(io, socket);
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async() => {
         for (const userId in onlineUsers) {
             if (onlineUsers[userId] === socket.id) {
                 delete onlineUsers[userId];
+                await client.query(`
+                  UPDATE users SET last_active = CURRENT_TIMESTAMP, is_online = false WHERE id = $1
+                  `,[userId])
                 console.log(`User ${userId} disconnected`);
                 break;
             }

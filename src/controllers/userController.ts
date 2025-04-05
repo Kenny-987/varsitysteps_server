@@ -324,7 +324,7 @@ export  async function getMyTutors(req: Request, res: Response) {
         try {
             const user_id = req.user?.id
             const tutorList = await client.query(`
-                SELECT users.username,users.profile_image,tutors.user_id
+                SELECT users.username,users.profile_image,last_active,is_online,tutors.user_id
                 FROM users
                 JOIN tutors ON users.id = tutors.user_id
                 JOIN connections ON users.id = connections.tutor_id
@@ -345,7 +345,7 @@ export  async function getMyTutors(req: Request, res: Response) {
 export async function studentProfile (req: Request, res: Response){
     const studentId = req.params.id
     try {
-        const result = await client.query(`SELECT id,username,location, profile_image,students.*
+        const result = await client.query(`SELECT id,username,location, profile_image,last_active,is_online,students.*
             FROM users 
             LEFT JOIN students  
             ON users.id = students.user_id
