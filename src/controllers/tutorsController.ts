@@ -18,7 +18,8 @@ export async function getTutors(req: Request, res: Response) {
             LEFT JOIN tutors ON users.id = tutors.user_id
             LEFT JOIN tutor_rating ON tutors.user_id = tutor_rating.tutor_id
             WHERE roles.role_name = 'tutor' AND is_premium = 'true'
-            GROUP BY users.id, tutors.user_id`)
+            GROUP BY users.id, tutors.user_id
+            ORDER BY average_rating DESC`)
         const tutors =  result.rows
         if(tutors.length == 0){
             return res.status(404).json({message:'no tutors found'})
@@ -83,14 +84,13 @@ export async function tutorProfile(req: Request, res: Response, next: NextFuncti
 export async function rateTutor(req:Request,res:Response) {
     if(req.isAuthenticated()){
         try {
-            const {rateScore,tutor_id,rater_id} = req.body
-            await client.query(`INSERT INTO tutor_rating (tutor_id,rater_id,rating) VALUES($1,$2,$3)`,[tutor_id,rater_id,rateScore])
-            const newRating = await client.query(`SELECT tutor_id,
-            COUNT(*) AS total_ratings,
-            AVG(rating) AS average_rating
-            FROM tutor_rating
-            WHERE tutor_id = $1  
-            GROUP BY  tutor_id`,[tutor_id])
+            const {rateScore,tutor_id,rater_id,review} = req.body
+            await client.query(`INSERT INTO tutor_rating (tutor_id,rater_id,rating,review) VALUES($1,$2,$3,$4)
+                ON CONFLICT (tutor_id,rater_id)
+                DO UPDATE SET
+                rating = EXCLUDED.rating,
+                review = EXCLUDED.review
+                `,[tutor_id,rater_id,rateScore,review])
             res.status(200).json({msg:'okay'}) 
         } catch (error) {
             console.error(error)
@@ -110,14 +110,13 @@ export async function hasRated(req:Request,res:Response) {
         try {
             let hasRated= false
             const result = await client.query(`
-                SELECT rating
+                SELECT * 
                 FROM tutor_rating
                 WHERE rater_id = $1 AND tutor_id = $2;
                 `,[user_id,tutor_id])
             
             if(result.rows.length > 0){
-                hasRated = true
-                res.status(200).json(hasRated)
+                res.status(200).json(result.rows[0])
             }else{
                 res.status(200).json(hasRated)
             }
