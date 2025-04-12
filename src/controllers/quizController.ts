@@ -5,17 +5,22 @@ import { updateLBA, updateTiers } from '../utility/updateGameData';
 export async function getQuiz(req:Request,res:Response) {
     try {
         const {query} = req.query
-        const quizzes = await client.query(`
-           SELECT qu.quiz_date::TEXT,qu.id as quiz_id, qt.topic AS topic_name, qn.question_text, qn.answer_options,qn.correct_answer, qn.extra_info
-           FROM quizzes qu
-           JOIN quiz_topics qt ON qu.topic_id = qt.id
-           JOIN questions qn ON qu.id = qn.quiz_id
-           WHERE qt.topic ILIKE $1 
-           AND qu.quiz_date = CURRENT_DATE
-           ORDER BY qu.quiz_date DESC;
-            `,[`%${query}%`])
+        // const quizzes = await client.query(`
+        //    SELECT qu.quiz_date::TEXT,qu.id as quiz_id, qt.topic AS topic_name, qn.question_text, qn.answer_options,qn.correct_answer, qn.extra_info
+        //    FROM quizzes qu
+        //    JOIN quiz_topics qt ON qu.topic_id = qt.id
+        //    JOIN questions qn ON qu.id = qn.quiz_id
+        //    WHERE qt.topic ILIKE $1 
+        //    AND qu.quiz_date = CURRENT_DATE
+        //    ORDER BY qu.quiz_date DESC;
+        //     `,[`%${query}%`])
 
-            
+            const quizzes = await client.query(`
+            SELECT qu.* as quiz_id, qt.topic AS topic_name
+            FROM quizzes qu
+            JOIN quiz_topics qt ON qu.topic_id = qt.id
+            WHERE qt.topic ILIKE $1
+                `,[`%${query}%`])
         res.status(200).json(quizzes.rows)
     } catch (error) {
         console.error(error)
@@ -23,7 +28,21 @@ export async function getQuiz(req:Request,res:Response) {
     }
 }
 
-
+export async function getQuestions(req:Request,res:Response) {
+    try {
+        const {query} = req.query
+       
+        const questions = await client.query(`
+            SELECT  id,question_text, answer_options,correct_answer, extra_info,image
+            FROM questions
+           WHERE quiz_id= $1
+            `,[query])
+            res.status(200).json(questions.rows)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({message:'internal server error'})
+    }
+}
 //function to update has played
 export async function hasPlayed(req:Request,res:Response) {
     if(req.isAuthenticated()){
